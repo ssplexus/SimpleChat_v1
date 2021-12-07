@@ -31,7 +31,6 @@ class ClientConnection implements Runnable
 
     public void run()
     {
-
         try
         {
             in = new BufferedReader(new InputStreamReader(
@@ -73,7 +72,6 @@ class ClientConnection implements Runnable
             }
             System.out.println(name + " left the chat");
         }
-
     }
 }
 

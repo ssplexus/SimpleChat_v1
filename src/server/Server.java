@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Класс сервера чата
+ */
 public class Server {
     private static int port = 3333;
 
@@ -17,14 +20,12 @@ public class Server {
             System.err.println(e);
             System.exit(1);
         }
-
-
         Socket client = null;
         while(true)
         {
             try
             {
-                client = server.accept();
+                client = server.accept(); // Ждём клиента
             }
             catch (IOException e)
             {
@@ -35,6 +36,7 @@ public class Server {
 
             try
             {
+                // Если есть клиент запускаем для него отдельный поток
                 new Thread(new ClientConnection(client)).start();
             }
             catch (ThreadDeath e)

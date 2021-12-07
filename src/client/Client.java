@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.Socket;
 
 /**
@@ -23,14 +24,15 @@ public class Client
 
         try
         {
-            server = new Socket(host, port);
-            out = new PrintWriter(server.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(server.getInputStream()));
-            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+            server = new Socket(host, port); // подключение к серверу
+            out = new PrintWriter(server.getOutputStream(), true); // поток отправки сообщений на сервер
+            in = new BufferedReader(new InputStreamReader(server.getInputStream())); // поток чтения из сокета
+            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in)); // поток стандартного ввода
 
             System.out.print("Enter nick: ");
-            out.println(stdIn.readLine());
+            out.println(stdIn.readLine()); // представляемся
 
+            // Создаём поток чтения ответа от сервера
             Thread reader = new Thread()
             {
                 String read = "";
@@ -40,8 +42,8 @@ public class Client
                         try
                         {
                             read = in.readLine();
-                            if(read == null) break;
-                            System.out.println(read);
+                            if(read == null) break; // если поток чтения разорвался, то выход из цикла потока
+                            System.out.println(read); // выводим ответ от сервера
                         } catch (IOException e)
                         {
                             e.printStackTrace();
@@ -50,18 +52,25 @@ public class Client
                     }
                 }
             };
-            reader.start();
+            reader.start(); // запуск потока
             String outMsg = "";
-            while (reader.isAlive())
+            while (reader.isAlive()) // работа чата пока поток чтения жив
             {
+                // Если отправили серверу "bye", то поток клиента на стороне сервера завершает работу и
+                // readLine для потока чтения из сокета возвращает null, поток чтения завершается,
+                // происходит выход из цикла и завершения работы клиента
                 if(outMsg.equalsIgnoreCase("bye"))
-                    reader.join();
+                    reader.join(); // ожидаем отключения
                 else
                 {
-                    outMsg = stdIn.readLine();
+                    outMsg = stdIn.readLine(); // ввод сообщения в чат
                     out.println(outMsg);
                 }
             }
+        }
+        catch (ConnectException exception)
+        {
+            System.out.println("Connection error!");
         }
         catch (IOException | InterruptedException e)
         {
@@ -73,9 +82,9 @@ public class Client
         {
             try
             {
-                in.close();
-                out.close();
-                server.close();
+                if(in != null) in.close();
+                if(out != null) out.close();
+                if(server != null) server.close();
             }
             catch (IOException e)
             {
